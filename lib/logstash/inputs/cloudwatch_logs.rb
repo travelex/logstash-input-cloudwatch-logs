@@ -139,7 +139,8 @@ class LogStash::Inputs::CloudWatch_Logs < LogStash::Inputs::Base
     params = {
         :log_group_name => @log_group,
         :log_stream_name => stream.log_stream_name,
-        :start_from_head => true
+        :start_from_head => true,
+        :start_time => (Time.now.to_i - 60) * 1000
     }
 
     if token != nil
