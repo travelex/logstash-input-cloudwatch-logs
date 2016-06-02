@@ -35,6 +35,9 @@ class LogStash::Inputs::CloudWatch_Logs < LogStash::Inputs::Base
   # Value is in seconds.
   config :interval, :validate => :number, :default => 60
 
+  # Seconds back in time from which we are going to fetch the logs
+  config :since, :validate => :number, :default => 60
+
   # def register
   public
   def register
@@ -140,7 +143,7 @@ class LogStash::Inputs::CloudWatch_Logs < LogStash::Inputs::Base
         :log_group_name => @log_group,
         :log_stream_name => stream.log_stream_name,
         :start_from_head => true,
-        :start_time => (Time.now.to_i - 60) * 1000
+        :start_time => (Time.now.to_i - @since) * 1000
     }
 
     if token != nil
