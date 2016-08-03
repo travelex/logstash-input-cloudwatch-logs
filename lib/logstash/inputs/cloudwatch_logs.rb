@@ -37,6 +37,9 @@ class LogStash::Inputs::CloudWatch_Logs < LogStash::Inputs::Base
 
   # Seconds back in time from which we are going to fetch the logs
   config :since, :validate => :number, :default => 60
+  
+# Number of hours back from which we are fetching the logs
+  config :buffer, :validate => :number, :default => 1
 
   # def register
   public
@@ -75,7 +78,7 @@ class LogStash::Inputs::CloudWatch_Logs < LogStash::Inputs::Base
     streams = @cloudwatch.describe_log_streams(params)
 
     objects.push(*streams.log_streams)
-    if streams.next_token == nil
+    if streams.next_token == nil || (streams[-1].last_event_timestamp < (Time.now - 60*60*@buffer).to_i*1000)
       @logger.debug("CloudWatch Logs hit end of tokens for streams")
       objects
     else
@@ -143,7 +146,7 @@ class LogStash::Inputs::CloudWatch_Logs < LogStash::Inputs::Base
         :log_group_name => @log_group,
         :log_stream_name => stream.log_stream_name,
         :start_from_head => true,
-        :start_time => (Time.now.to_i - @since) * 1000
+        :start_time => (Time.now.to_i - 60*@buffer) * 1000,
     }
 
     if token != nil
