@@ -78,7 +78,7 @@ class LogStash::Inputs::CloudWatch_Logs < LogStash::Inputs::Base
     streams = @cloudwatch.describe_log_streams(params)
 
     objects.push(*streams.log_streams)
-    if streams.next_token == nil || (streams[-1].last_event_timestamp < (Time.now - 60*60*@buffer).to_i*1000)
+    if streams.next_token == nil || (streams.log_streams[-1].last_event_timestamp < (Time.now - 60*60*@buffer).to_i*1000)
       @logger.debug("CloudWatch Logs hit end of tokens for streams")
       objects
     else
