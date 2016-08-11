@@ -76,14 +76,13 @@ class LogStash::Inputs::CloudWatch_Logs < LogStash::Inputs::Base
     end
 
     streams = @cloudwatch.describe_log_streams(params)
-
+    sleep(1.0/5.0)
     objects.push(*streams.log_streams)
     if streams.next_token == nil
       @logger.debug("CloudWatch Logs hit end of tokens for streams")
       objects
     else
       @logger.debug("CloudWatch Logs calling list_new_streams again on token", :token => streams.next_token)
-      sleep 30
       list_new_streams(streams.next_token, objects)
     end
 
@@ -155,7 +154,7 @@ class LogStash::Inputs::CloudWatch_Logs < LogStash::Inputs::Base
     end
 
     logs = @cloudwatch.get_log_events(params)
-
+    sleep(1.0/10.0)
     logs.events.each do |log|
       if log.ingestion_time > last_read
         process_log(queue, log, stream)
