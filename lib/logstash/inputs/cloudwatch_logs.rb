@@ -91,37 +91,44 @@ class LogStash::Inputs::CloudWatch_Logs < LogStash::Inputs::Base
 
   # def list_new_streams_for_log_group
   public
-  def list_new_streams_for_log_group(log_group, token = nil, objects = [], stepback=0)
+  def list_new_streams_for_log_group(log_group)
     params = {
       :log_group_name => log_group,
       :order_by => "LastEventTime",
       :descending => false
     }
+    token = nil
+    objects = []
+    stepback = 0
 
     @logger.debug("CloudWatch Logs for log_group #{log_group}")
 
-    if token != nil
-      params[:next_token] = token
-    end
+    loop do
+      if token != nil
+        params[:next_token] = token
+      end
 
-    begin
-      streams = @cloudwatch.describe_log_streams(params)
-    rescue Aws::CloudWatchLogs::Errors::ThrottlingException
-      @logger.debug("CloudWatch Logs stepping back ", :stepback => 2 ** stepback * 60)
-      sleep(2 ** stepback * 60)
-      stepback += 1
-      @logger.debug("CloudWatch Logs repeating list_new_streams again with token", :token => token)
-      return list_new_streams_for_log_group(log_group, token=token, objects=objects, stepback=stepback)
-    end
+      begin
+        streams = @cloudwatch.describe_log_streams(params)
+      rescue Aws::CloudWatchLogs::Errors::ThrottlingException
+        @logger.debug("CloudWatch Logs stepping back ", :stepback => 2 ** stepback * 60)
+        sleep(2 ** stepback * 60)
+        stepback += 1
+        @logger.debug("CloudWatch Logs repeating list_new_streams again with token", :token => token)
+      end
 
-    objects.push(*streams.log_streams)
-    if streams.next_token == nil || (streams[-1].last_event_timestamp < (Time.now - 60*60*@buffer).to_i*1000)
-      @logger.debug("CloudWatch Logs hit end of tokens for streams")
-      objects
-    else
-      @logger.debug("CloudWatch Logs calling list_new_streams again on token", :token => streams.next_token)
-      list_new_streams_for_log_group(log_group, streams.next_token, objects)
+      objects.push(*streams.log_streams)
+
+      if streams.next_token == nil || (streams[-1].last_event_timestamp < (Time.now - 60*60*@buffer).to_i*1000)
+        @logger.debug("CloudWatch Logs hit end of tokens for streams")
+        break
+      else
+        @logger.debug("CloudWatch Logs calling list_new_streams again on token", :token => streams.next_token)
+        stepback = 0
+        token = streams.next_token
+      end
     end
+    objects
   end # def list_new_streams_for_log_group
 
   # def process_log
