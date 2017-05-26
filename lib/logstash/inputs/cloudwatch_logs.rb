@@ -45,6 +45,9 @@ class LogStash::Inputs::CloudWatch_Logs < LogStash::Inputs::Base
   # Decide if log_group is a prefix or an absolute name
   config :log_group_prefix, :validate => :boolean, :default => false
 
+  # Seconds back in time from which we are going to fetch the logs
+  config :since, :validate => :number, :default => 60
+  
   # Number of hours back from which we are fetching the logs
   config :buffer, :validate => :number, :default => 1
 
@@ -195,7 +198,6 @@ class LogStash::Inputs::CloudWatch_Logs < LogStash::Inputs::Base
     if token != nil
       params[:next_token] = token
     end
-
 
     begin
       logs = @cloudwatch.get_log_events(params)
