@@ -115,6 +115,7 @@ class LogStash::Inputs::CloudWatch_Logs < LogStash::Inputs::Base
         sleep(2 ** stepback * 60)
         stepback += 1
         @logger.debug("CloudWatch Logs repeating list_new_streams again with token", :token => token)
+        next
       end
 
       objects.push(*streams.log_streams)
