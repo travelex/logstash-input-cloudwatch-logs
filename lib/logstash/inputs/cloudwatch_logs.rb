@@ -48,7 +48,7 @@ class LogStash::Inputs::CloudWatch_Logs < LogStash::Inputs::Base
   public
   def register
     require "digest/md5"
-    @logger.trace("Registering cloudwatch_logs input", :log_group => @log_group)
+    @logger.debug("Registering cloudwatch_logs input", :log_group => @log_group)
     settings = defined?(LogStash::SETTINGS) ? LogStash::SETTINGS : nil
     @sincedb = {}
 
