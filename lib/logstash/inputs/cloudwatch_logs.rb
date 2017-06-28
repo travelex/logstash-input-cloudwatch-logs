@@ -136,7 +136,7 @@ class LogStash::Inputs::CloudWatch_Logs < LogStash::Inputs::Base
       params = {
           :log_group_name => group,
           :start_time => @sincedb[group],
-          :limit => 10000,
+          :limit => 100,
           :interleaved => true,
           :next_token => next_token
       }
