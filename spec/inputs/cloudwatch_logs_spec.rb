@@ -13,7 +13,7 @@ describe LogStash::Inputs::CloudWatch_Logs do
       {
           'access_key_id' => '1234',
           'secret_access_key' => 'secret',
-          'log_group' => 'sample-log-group',
+          'log_group' => ['sample-log-group'],
           'region' => 'us-east-1'
       }
     }
