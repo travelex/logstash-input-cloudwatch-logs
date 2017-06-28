@@ -44,9 +44,6 @@ class LogStash::Inputs::CloudWatch_Logs < LogStash::Inputs::Base
   # Decide if log_group is a prefix or an absolute name
   config :log_group_prefix, :validate => :boolean, :default => false
 
-  # Number of hours back from which we are fetching the logs
-  config :buffer, :validate => :number, :default => 1
-
   # def register
   public
   def register
