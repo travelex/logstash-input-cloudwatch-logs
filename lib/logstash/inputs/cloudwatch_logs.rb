@@ -44,6 +44,9 @@ class LogStash::Inputs::CloudWatch_Logs < LogStash::Inputs::Base
   # Decide if log_group is a prefix or an absolute name
   config :log_group_prefix, :validate => :boolean, :default => false
 
+  # The number of log messages to read from CWL for each call
+  config :retrieve_log_count, :validate => :number, :default => 1000
+
   # def register
   public
   def register
@@ -136,7 +139,7 @@ class LogStash::Inputs::CloudWatch_Logs < LogStash::Inputs::Base
       params = {
           :log_group_name => group,
           :start_time => @sincedb[group],
-          :limit => 100,
+          :limit => @retrieve_log_count,
           :interleaved => true,
           :next_token => next_token
       }
