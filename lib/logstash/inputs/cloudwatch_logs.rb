@@ -132,13 +132,14 @@ class LogStash::Inputs::CloudWatch_Logs < LogStash::Inputs::Base
   private
   def process_group(group)
     next_token = nil
+    this_sincedb = @sincedb[group]
     loop do
       if !@sincedb.member?(group)
         @sincedb[group] = 0
       end
       params = {
           :log_group_name => group,
-          :start_time => @sincedb[group],
+          :start_time => this_sincedb,
           :limit => @retrieve_log_count,
           :interleaved => true,
           :next_token => next_token
