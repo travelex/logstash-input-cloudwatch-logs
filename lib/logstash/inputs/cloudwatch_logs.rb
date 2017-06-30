@@ -100,7 +100,7 @@ class LogStash::Inputs::CloudWatch_Logs < LogStash::Inputs::Base
       groups = find_log_groups
 
       groups.each do |group|
-        @logger.debug("calling process_group on #{group}")
+        @logger.info("calling process_group on #{group}")
         process_group(group)
       end # groups.each
     end
@@ -144,6 +144,8 @@ class LogStash::Inputs::CloudWatch_Logs < LogStash::Inputs::Base
           :next_token => next_token
       }
       resp = @cloudwatch.filter_log_events(params)
+
+      @logger.info("CA: #{group}: #{resp.events.length}")
 
       resp.events.each do |event|
         process_log(event, group)
