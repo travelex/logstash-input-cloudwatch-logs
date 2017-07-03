@@ -132,16 +132,18 @@ class LogStash::Inputs::CloudWatch_Logs < LogStash::Inputs::Base
   private
   def process_group(group)
     next_token = nil
-    this_sincedb = @sincedb[group]
+    filter_end_time = (Time.now.to_f * 1000).to_i
+    filter_start_time = @sincedb[group]
     loop do
       if !@sincedb.member?(group)
         @sincedb[group] = 0
       end
       params = {
           :log_group_name => group,
-          :start_time => this_sincedb,
+          :start_time => filter_start_time,
+          :end_time => filter_end_time,
           :limit => @retrieve_log_count,
-          :interleaved => true,
+          :interleaved => false,
           :next_token => next_token
       }
       resp = @cloudwatch.filter_log_events(params)
@@ -152,11 +154,12 @@ class LogStash::Inputs::CloudWatch_Logs < LogStash::Inputs::Base
         process_log(event, group)
       end
 
-      _sincedb_write
-
       next_token = resp.next_token
       break if next_token.nil?
     end
+    @logger.info("CA: #{group}: #{filter_start_time} -> #{filter_end_time + 1}")
+    @sincedb[group] = filter_end_time + 1
+    _sincedb_write
   end #def process_group
 
   # def process_log
@@ -172,7 +175,6 @@ class LogStash::Inputs::CloudWatch_Logs < LogStash::Inputs::Base
       decorate(event)
 
       @queue << event
-      @sincedb[group] = log.timestamp + 1
     end
   end # def process_log
 
