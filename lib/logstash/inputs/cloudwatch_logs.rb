@@ -100,7 +100,7 @@ class LogStash::Inputs::CloudWatch_Logs < LogStash::Inputs::Base
       groups = find_log_groups
 
       groups.each do |group|
-        @logger.info("calling process_group on #{group}")
+        @logger.info("#{group} Interval: triggered")
         process_group(group)
       end # groups.each
     end
@@ -134,6 +134,8 @@ class LogStash::Inputs::CloudWatch_Logs < LogStash::Inputs::Base
     next_token = nil
     filter_end_time = (Time.now.to_f * 1000).to_i
     filter_start_time = @sincedb[group]
+    
+    @logger.info("#{group} Begin loop")
     loop do
       if !@sincedb.member?(group)
         @sincedb[group] = 0
@@ -146,18 +148,22 @@ class LogStash::Inputs::CloudWatch_Logs < LogStash::Inputs::Base
           :interleaved => false,
           :next_token => next_token
       }
+      @logger.info("#{group} Loop: Get logs from CW with params #{params.inspect}")
       resp = @cloudwatch.filter_log_events(params)
-
-      @logger.info("CA: #{group}: #{resp.events.length}")
+      @logger.info("#{group} Loop: Pulled #{resp.events.length} logs")
 
       resp.events.each do |event|
         process_log(event, group)
       end
+      @logger.info("#{group} Loop: Finished processing logs")
 
       next_token = resp.next_token
+      if next_token.nil?
+        @logger.info("#{group} Next token is empty")  
+      end
       break if next_token.nil?
     end
-    @logger.info("CA: #{group}: #{filter_start_time} -> #{filter_end_time + 1}")
+    @logger.info("#{group} Loop: timings - #{filter_start_time} -> #{filter_end_time + 1}")
     @sincedb[group] = filter_end_time + 1
     _sincedb_write
   end #def process_group
