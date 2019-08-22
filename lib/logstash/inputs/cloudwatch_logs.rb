@@ -115,7 +115,7 @@ class LogStash::Inputs::CloudWatch_Logs < LogStash::Inputs::Base
       next_token = nil
       @log_group.each do |group|
         loop do
-          sleep 2
+          sleep 4
           log_groups = @cloudwatch.describe_log_groups(log_group_name_prefix: group, next_token: next_token)
           groups += log_groups.log_groups.map {|n| n.log_group_name}
           next_token = log_groups.next_token
@@ -150,7 +150,7 @@ class LogStash::Inputs::CloudWatch_Logs < LogStash::Inputs::Base
           :next_token => next_token
       }
       @logger.info("#{group} Loop: Get logs from CW with params #{params.inspect}")
-      sleep 2
+      sleep 4
       resp = @cloudwatch.filter_log_events(params)
       @logger.info("#{group} Loop: Pulled #{resp.events.length} logs")
 
